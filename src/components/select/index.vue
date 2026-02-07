@@ -7,6 +7,8 @@ import { Column } from 'element-plus';
 
 const props = withDefaults(defineProps<Props<T>>(), {
   modelValue: undefined,
+  multiple: false,
+  filterable: true,
   column: () => [],
   options: () => [],
   dialogConfig: () => ({
@@ -20,6 +22,7 @@ const props = withDefaults(defineProps<Props<T>>(), {
   config: () => ({
     fieldLabel: 'label',
     fieldValue: 'value',
+    filterable: true,
   }),
 });
 
@@ -28,7 +31,9 @@ const emit = defineEmits<{
   (e: 'more-click'): void;
 }>();
 
+const innerValue = ref<T | undefined>(props.modelValue);
 const dialogValue = ref(false);
+
 const { list } = useSelectOptions(
   {
     options: props.options,
@@ -42,7 +47,6 @@ const { list } = useSelectOptions(
 );
 const { columns } = useTableList(props.column);
 
-const innerValue = ref<T | undefined>(props.modelValue);
 watch(
   () => props.modelValue,
   (newVal) => {
@@ -70,6 +74,7 @@ const showMoreOptions = () => {
         :model-value="innerValue"
         @update:model-value="handleSelectChange"
         placeholder="请选择"
+        v-bind="config"
         class="custom-select"
       >
         <el-option
@@ -79,7 +84,6 @@ const showMoreOptions = () => {
           :value="item.value"
         />
       </el-select>
-
       <el-button link type="primary" class="more-btn" @click="showMoreOptions">
         ...
       </el-button>

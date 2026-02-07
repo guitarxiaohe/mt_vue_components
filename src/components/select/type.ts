@@ -1,11 +1,11 @@
-import { Column } from 'element-plus';
+import { Column, SelectInstance } from 'element-plus';
 
 export interface Props<T> {
   modelValue?: T;
 
   options: Option[];
 
-  config: Config;
+  config: SelectInstance | Config;
 
   dialogConfig: DialogConfig;
 
