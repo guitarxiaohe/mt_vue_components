@@ -1,12 +1,10 @@
 <script setup lang="ts" generic="T extends string | Array<string>">
-import { computed, ref, toRef, toRefs, watch } from 'vue';
-import type { Props, Option } from './type';
+import { ref, useSlots } from 'vue';
+import type { Props } from './type';
 import { useSelectOptions } from './hooks/useTransformedOptions';
 import { useTableList } from './hooks/useTableList';
-import { Column } from 'element-plus';
 
 const props = withDefaults(defineProps<Props<T>>(), {
-  modelValue: undefined,
   multiple: false,
   filterable: true,
   column: () => [],
@@ -16,13 +14,12 @@ const props = withDefaults(defineProps<Props<T>>(), {
     title: '查询列表',
   }),
 
-  tableConfig: () => ({
-    height: 500,
-  }),
+  tableConfig: () => ({ width: 1000, height: 500, keyId: 'value' }),
   config: () => ({
     fieldLabel: 'label',
     fieldValue: 'value',
     filterable: true,
+    disabled: false,
   }),
 });
 
@@ -31,9 +28,8 @@ const emit = defineEmits<{
   (e: 'more-click'): void;
 }>();
 
-const innerValue = ref<T | undefined>(props.modelValue);
 const dialogValue = ref(false);
-
+const innerValue = defineModel<T | undefined>();
 const { list } = useSelectOptions(
   {
     options: props.options,
@@ -45,20 +41,14 @@ const { list } = useSelectOptions(
   },
   ''
 );
-const { columns } = useTableList(props.column);
-
-watch(
-  () => props.modelValue,
-  (newVal) => {
-    innerValue.value = newVal;
+const { columns, getTableSelect } = useTableList(
+  props.column,
+  props.tableConfig,
+  (e) => {
+    console.log(e);
   }
 );
-
-const handleSelectChange = (value: T) => {
-  innerValue.value = value;
-  emit('update:modelValue', value);
-};
-
+console.log('getTableSelect ==>', getTableSelect());
 // 右侧...点击弹框列表
 const showMoreOptions = () => {
   dialogValue.value = true;
@@ -70,21 +60,23 @@ const showMoreOptions = () => {
 <template>
   <div class="ayc-select">
     <div class="select-with-btn">
-      <el-select
-        :model-value="innerValue"
-        @update:model-value="handleSelectChange"
-        placeholder="请选择"
+      <el-select-v2
+        v-model="innerValue"
+        :options="list"
         v-bind="config"
         class="custom-select"
       >
-        <el-option
-          v-for="item in list"
-          :key="String(item.value)"
-          :label="item.label"
-          :value="item.value"
-        />
-      </el-select>
-      <el-button link type="primary" class="more-btn" @click="showMoreOptions">
+        <template v-for="(_, name) in $slots" #[name]="slotProps">
+          <slot :name="name" v-bind="slotProps" />
+        </template>
+      </el-select-v2>
+      <el-button
+        v-if="!disabled"
+        link
+        type="primary"
+        class="more-btn"
+        @click="showMoreOptions"
+      >
         ...
       </el-button>
     </div>
@@ -92,12 +84,14 @@ const showMoreOptions = () => {
     <!-- 弹窗 -->
     <el-dialog v-model="dialogValue" v-bind="props.dialogConfig">
       <div class="select-table">
-        <el-table-v2
-          :columns="columns"
-          :data="list"
-          v-bind="props.tableConfig"
-          fixed
-        />
+        <el-auto-resizer>
+          <el-table-v2
+            :columns="columns"
+            :data="list"
+            v-bind="props.tableConfig"
+            fixed
+          />
+        </el-auto-resizer>
       </div>
     </el-dialog>
   </div>
