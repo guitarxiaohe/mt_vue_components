@@ -28,5 +28,6 @@
     "vite.config.ts",
     "App.vue"
   ],
+
   "references": [{ "path": "./tsconfig.node.json" }]
 }

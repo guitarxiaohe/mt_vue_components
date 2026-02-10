@@ -44,7 +44,9 @@ export const useTableList = (
   columns.unshift({
     key: 'selection',
     width: 50,
-    cellRenderer: ({ rowData }) => {
+    cellRenderer: ({ rowData, rowIndex }) => {
+      console.log(rowIndex);
+
       const isChecked = selectionMap.value.has(
         String(rowData[tableConfig.keyId])
       );
@@ -53,6 +55,7 @@ export const useTableList = (
         modelValue: isChecked,
         'onUpdate:modelValue': () => toggleRow(rowData),
         ariaLabel: '选择行',
+        rowIndex,
       });
     },
   });
